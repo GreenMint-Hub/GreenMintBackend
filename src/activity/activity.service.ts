@@ -7,6 +7,12 @@ import {
   ActivityType,
   ActivityStatus,
 } from './schemas/activity.schema';
+import { Vote, VoteDocument } from './schemas/vote.schema';
+import { BlockchainService } from '../blockchain/blockchain.service';
+import { UsersService } from '../users/users.service';
+import * as cron from 'node-cron';
+import { ChallengeService } from '../challenge/challenge.service';
+import { Challenge, ChallengeDocument } from '../challenge/challenge.schema';
 
 export interface SensorData {
   speed: number; // km/h
@@ -28,7 +34,25 @@ export interface ActivityDetectionResult {
 export class ActivityService {
   constructor(
     @InjectModel(Activity.name) private activityModel: Model<ActivityDocument>,
-  ) {}
+    @InjectModel(Vote.name) private voteModel: Model<VoteDocument>,
+    private readonly blockchainService: BlockchainService,
+    private readonly usersService: UsersService,
+    @InjectModel(Challenge.name) private challengeModel: Model<ChallengeDocument>,
+    private readonly challengeService: ChallengeService,
+  ) {
+    // Schedule a job to run every hour to delete expired voting actions
+    cron.schedule('0 * * * *', async () => {
+      const twoDaysAgo = new Date(Date.now() - 2 * 24 * 60 * 60 * 1000);
+      const expired = await this.activityModel.find({
+        status: 'voting',
+        createdAt: { $lte: twoDaysAgo },
+      });
+      for (const act of expired) {
+        await this.activityModel.findByIdAndDelete(act._id);
+        console.log(`Deleted expired voting action ${act._id}`);
+      }
+    });
+  }
 
   /**
    * Detect activity type based on speed and sensor data
@@ -229,27 +253,34 @@ export class ActivityService {
    * Log a new activity manually
    */
   async logActivity(userId: string, activityData: any): Promise<Activity> {
-    const activity = new this.activityModel({
-      userId: new Types.ObjectId(userId),
-      type: activityData.type,
-      title: activityData.title,
-      description: activityData.description,
-      carbonSaved: activityData.co2Saved || 0,
-      points: activityData.points || 0,
-      startTime: new Date(),
-      endTime: new Date(),
-      distance: 0,
-      status: ActivityStatus.VERIFIED,
-      verificationMethod: 'manual',
-    });
+    // Add points to user
+    await this.usersService.addPoints(userId, activityData.points || 0);
 
+    // If user is in an active challenge, add points to challenge
+    const activeChallenge = await this.challengeModel.findOne({
+      'participants.user': userId,
+      status: 'active',
+      startDate: { $lte: new Date() },
+      endDate: { $gte: new Date() },
+    });
+    let challengeId: string | null = null;
+    if (activeChallenge) {
+      await this.challengeService.addPointsToUser(String(activeChallenge._id), userId, activityData.points || 0);
+      challengeId = String(activeChallenge._id);
+    }
+
+    // Save activity with challengeId if applicable
+    const activity = new this.activityModel({
+      ...activityData,
+      userId,
+      challengeId,
+    });
     // Update user stats
     await this.updateUserStats(
       userId,
       activityData.co2Saved || 0,
       activityData.points || 0,
     );
-
     return await activity.save();
   }
 
@@ -262,11 +293,11 @@ export class ActivityService {
     });
 
     const totalCarbonSaved = activities.reduce(
-      (sum, activity) => sum + activity.carbonSaved,
+      (sum, activity) => sum + (activity.carbonSaved || 0),
       0,
     );
     const totalPoints = activities.reduce(
-      (sum, activity) => sum + activity.points,
+      (sum, activity) => sum + (activity.points || 0),
       0,
     );
     const totalActivities = activities.length;
@@ -309,5 +340,89 @@ export class ActivityService {
       throw new BadRequestException('Activity not found');
     }
     return activity;
+  }
+
+  async createMediaActivity({ userId, actionType, mediaUrl, mediaType, description }: {
+    userId: string;
+    actionType: string;
+    mediaUrl: string;
+    mediaType: string;
+    description?: string;
+  }): Promise<Activity> {
+    const activity = new this.activityModel({
+      userId: new Types.ObjectId(userId),
+      type: actionType,
+      mediaUrl,
+      mediaType,
+      description,
+      status: 'voting',
+      assignedVoters: [],
+      votes: [],
+      votingQuorum: 5,
+    });
+    return await activity.save();
+  }
+
+  async assignVoters(activityId: Types.ObjectId) {
+    // TODO: Select 5-10 random users (excluding uploader)
+    // For now, just leave assignedVoters empty
+    // In production, implement random user selection
+    await this.activityModel.findByIdAndUpdate(activityId, {
+      assignedVoters: [],
+    });
+  }
+
+  async voteOnAction(actionId: string, userId: string, value: 'yes' | 'no' | 'fake' | 'spam') {
+    // 1. Save vote
+    const vote = new this.voteModel({
+      actionId: new Types.ObjectId(actionId),
+      userId: new Types.ObjectId(userId),
+      value,
+    });
+    await vote.save();
+    // 2. Add to activity votes
+    const activity = await this.activityModel.findById(actionId);
+    if (!activity) throw new Error('Activity not found');
+    activity.votes.push({ userId, value });
+    // 3. Check for quorum
+    if (activity.votes.length >= activity.votingQuorum) {
+      // Calculate result
+      const yesVotes = activity.votes.filter(v => v.value === 'yes').length;
+      const validPercent = yesVotes / activity.votes.length;
+      if (validPercent >= 0.8) {
+        activity.status = ActivityStatus.VERIFIED;
+        activity.votingResult = 'valid';
+        // Award 50 points to the user for verified media action
+        await this.awardPointsToUser(activity.userId, 50);
+        // Mint NFT and/or send tokens
+        try {
+          const txHash = await this.blockchainService.mintNFT(
+            '0x' + activity.userId.toString(), // Replace with actual user wallet address
+            activity.mediaUrl || '' // Use mediaUrl as metadata URI
+          );
+          activity['blockchainTxHash'] = txHash;
+        } catch (err) {
+          // Log error but don't block
+          console.error('Blockchain mint error:', err);
+        }
+      } else {
+        activity.status = ActivityStatus.REJECTED;
+        activity.votingResult = 'rejected';
+      }
+    }
+    await activity.save();
+    return activity;
+  }
+
+  // Add this helper to award points to user
+  private async awardPointsToUser(userId: Types.ObjectId, points: number) {
+    // Actually increment ecoPoints for the user
+    await this.usersService.incrementEcoPoints(userId.toString(), points);
+  }
+
+  async getCommunityActions(userId: string): Promise<Activity[]> {
+    return this.activityModel
+      .find({ status: 'voting', userId: { $ne: new Types.ObjectId(userId) } })
+      .exec();
   }
 }

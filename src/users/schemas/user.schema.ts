@@ -22,6 +22,12 @@ export class User {
 
   @Prop({ type: String, default: null })
   resetToken: string | null;
+
+  @Prop({ default: 0 })
+  ecoPoints: number;
+
+  @Prop({ type: String, enum: ['user', 'admin'], default: 'user' })
+  role: 'user' | 'admin';
 }
 
 export const UserSchema = SchemaFactory.createForClass(User);

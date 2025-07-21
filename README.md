@@ -96,3 +96,10 @@ Nest is an MIT-licensed open source project. It can grow thanks to the sponsors 
 ## License
 
 Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+
+## Image Uploads (Supabase Storage)
+
+- Images uploaded via the /activity/media endpoint are now stored in Supabase Storage (bucket: images).
+- The Supabase project URL and anon key are hardcoded in `ipfs.service.ts` for now. For production, move these to environment variables.
+- Only the public URL is stored in the database, not the image itself.
+- To view/manage images, use the Supabase dashboard for your project.

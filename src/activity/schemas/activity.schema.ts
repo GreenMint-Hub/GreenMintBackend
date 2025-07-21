@@ -4,70 +4,78 @@ import { Document, Types } from 'mongoose';
 export type ActivityDocument = Activity & Document;
 
 export enum ActivityType {
-  BIKING = 'biking',
   WALKING = 'walking',
-  PUBLIC_TRANSPORT = 'public_transport',
+  BIKING = 'biking',
   DRIVING = 'driving',
+  RECYCLING = 'recycling',
+  BUS = 'bus',
+  OTHER = 'other',
 }
 
 export enum ActivityStatus {
   PENDING = 'pending',
   VERIFIED = 'verified',
   REJECTED = 'rejected',
+  VOTING = 'voting',
 }
 
 @Schema({ timestamps: true })
 export class Activity {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, required: true })
   userId: Types.ObjectId;
 
-  @Prop({ required: true, enum: ActivityType })
+  @Prop({ type: String, enum: ActivityType })
   type: ActivityType;
 
-  @Prop({ required: true })
-  startTime: Date;
+  @Prop()
+  title?: string;
 
-  @Prop({ required: true })
-  endTime: Date;
+  @Prop()
+  description?: string;
 
-  @Prop({ type: Number, required: true })
-  distance: number; // in kilometers
+  @Prop()
+  carbonSaved?: number;
 
-  @Prop({ type: Number, required: true })
-  carbonSaved: number; // in kg CO2
+  @Prop()
+  points?: number;
 
-  @Prop({ type: Number, required: true })
-  points: number;
+  @Prop()
+  startTime?: Date;
 
-  @Prop({ type: [Number], required: true })
-  startLocation: number[]; // [latitude, longitude]
+  @Prop()
+  endTime?: Date;
 
-  @Prop({ type: [Number], required: true })
-  endLocation: number[]; // [latitude, longitude]
+  @Prop()
+  distance?: number;
 
-  @Prop({ type: [Number] })
-  route?: number[][]; // array of [latitude, longitude] points
+  @Prop({ type: Types.ObjectId, ref: 'Challenge', default: null })
+  challengeId?: Types.ObjectId | string | null;
 
-  @Prop({ type: Number })
-  averageSpeed?: number; // in km/h
-
-  @Prop({ type: Number })
-  maxSpeed?: number; // in km/h
-
-  @Prop({ type: String, enum: ActivityStatus, default: ActivityStatus.PENDING })
+  @Prop({ default: ActivityStatus.PENDING })
   status: ActivityStatus;
 
   @Prop()
-  verificationMethod?: string; // 'sensor', 'manual', 'receipt'
+  verificationMethod?: string;
+
+  // Media upload fields
+  @Prop()
+  mediaUrl?: string;
 
   @Prop()
-  receiptUrl?: string; // for public transport receipts
+  mediaType?: string;
+
+  // Voting fields
+  @Prop({ type: [String], default: [] })
+  assignedVoters: string[];
+
+  @Prop({ type: [{ userId: String, value: String }], default: [] })
+  votes: { userId: string; value: string }[];
+
+  @Prop({ default: 5 })
+  votingQuorum: number;
 
   @Prop()
-  blockchainTxHash?: string; // transaction hash when logged to blockchain
-
-  @Prop()
-  notes?: string;
+  votingResult?: string;
 }
 
 export const ActivitySchema = SchemaFactory.createForClass(Activity);

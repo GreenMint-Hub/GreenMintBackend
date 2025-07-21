@@ -6,10 +6,13 @@ export type ChallengeDocument = Challenge & Document;
 @Schema({ timestamps: true })
 export class Challenge {
   @Prop({ required: true })
-  title: string;
+  name: string;
 
   @Prop({ required: true })
   description: string;
+
+  @Prop({ required: true })
+  goalPoints: number;
 
   @Prop({ required: true })
   startDate: Date;
@@ -17,11 +20,26 @@ export class Challenge {
   @Prop({ required: true })
   endDate: Date;
 
-  @Prop({ type: [String], default: [] })
-  participants: string[]; // user IDs
+  @Prop({
+    type: [
+      {
+        user: { type: Types.ObjectId, ref: 'User', required: true },
+        points: { type: Number, default: 0 },
+        joinedAt: { type: Date, default: Date.now },
+      },
+    ],
+    default: [],
+  })
+  participants: Array<{ user: Types.ObjectId; points: number; joinedAt: Date }>;
 
-  @Prop({ default: false })
-  isActive: boolean;
+  @Prop({ type: String, enum: ['active', 'completed'], default: 'active' })
+  status: 'active' | 'completed';
+
+  @Prop({ type: Types.ObjectId, ref: 'User' })
+  winner?: Types.ObjectId;
+
+  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  createdBy: Types.ObjectId;
 }
 
 export const ChallengeSchema = SchemaFactory.createForClass(Challenge);

@@ -53,7 +53,7 @@ export class ActivityClassifierService {
       features.avgSpeed <= 50 &&
       features.speedVariance > 20
     ) {
-      type = ActivityType.PUBLIC_TRANSPORT;
+      type = ActivityType.BUS;
       confidence = 0.7;
     }
     // Default to walking

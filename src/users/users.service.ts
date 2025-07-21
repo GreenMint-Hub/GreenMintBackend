@@ -54,4 +54,20 @@ export class UsersService {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
   }
+
+  async incrementEcoPoints(userId: string, points: number): Promise<User> {
+    const user = await this.userModel.findByIdAndUpdate(
+      userId,
+      { $inc: { ecoPoints: points } },
+      { new: true }
+    ).exec();
+    if (!user) {
+      throw new NotFoundException(`User with ID ${userId} not found`);
+    }
+    return user;
+  }
+
+  async addPoints(userId: string, points: number) {
+    await this.userModel.findByIdAndUpdate(userId, { $inc: { ecoPoints: points } });
+  }
 }

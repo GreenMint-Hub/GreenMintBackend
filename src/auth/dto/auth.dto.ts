@@ -23,6 +23,10 @@ export class RegisterDto {
   @IsNotEmpty()
   @MinLength(8)
   password: string;
+
+  @IsString()
+  @IsOptional()
+  role?: 'user' | 'admin'; // Optional, default to 'user'
 }
 
 export class LoginDto {

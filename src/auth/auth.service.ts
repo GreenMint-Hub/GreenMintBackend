@@ -28,9 +28,10 @@ export class AuthService {
       password: hashedPassword,
       isVerified: false,
       verificationToken: uuidv4(),
+      role: registerDto.role || 'user', // Default to 'user' if not provided
     });
 
-    const payload = { sub: (newUser as IUser)._id, email: newUser.email };
+    const payload = { sub: newUser['_id'], email: newUser.email, role: newUser.role };
     const accessToken = this.jwtService.sign(payload);
 
     // Send verification email
@@ -58,7 +59,7 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    const payload = { sub: (user as IUser)._id, email: user.email };
+    const payload = { sub: user['_id'], email: user.email, role: user.role };
     const accessToken = this.jwtService.sign(payload);
 
     return {
@@ -75,7 +76,7 @@ export class AuthService {
     const user = await this.usersService.findById(userId);
     if (!user) throw new NotFoundException('User not found');
     return {
-      accessToken: this.jwtService.sign({ sub: (user as IUser)._id, email: user.email }),
+      accessToken: this.jwtService.sign({ sub: user['_id'], email: user.email }),
     };
   }
 
@@ -94,7 +95,7 @@ export class AuthService {
     if (!user) throw new NotFoundException('User not found');
 
     const resetToken = uuidv4();
-    await this.usersService.update((user as IUser)._id, { resetToken });
+    await this.usersService.update(user['_id'], { resetToken });
 
     // Send password reset email
     try {
@@ -114,7 +115,7 @@ export class AuthService {
     if (!user) throw new UnauthorizedException('Invalid or expired token');
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
-    await this.usersService.update((user as IUser)._id, { 
+    await this.usersService.update(user['_id'], { 
       password: hashedPassword, 
       resetToken: null 
     });
@@ -124,7 +125,7 @@ export class AuthService {
     const user = await this.usersService.findByVerificationToken(token);
     if (!user) throw new UnauthorizedException('Invalid verification token');
 
-    await this.usersService.update((user as IUser)._id, { 
+    await this.usersService.update(user['_id'], { 
       isVerified: true, 
       verificationToken: null 
     });
@@ -135,7 +136,7 @@ export class AuthService {
     if (!user) throw new NotFoundException('User not found');
 
     const verificationToken = uuidv4();
-    await this.usersService.update((user as IUser)._id, { verificationToken });
+    await this.usersService.update(user['_id'], { verificationToken });
 
     // Send verification email
     try {

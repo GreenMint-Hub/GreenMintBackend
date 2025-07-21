@@ -7,11 +7,15 @@ import {
   Patch,
   UseGuards,
   Request,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
 import { ActivityService, SensorData } from './activity.service';
 import { ActivityClassifierService } from './activity-classifier.service';
 import { ActivityStatus } from './schemas/activity.schema';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { IPFSService } from '../common/services/ipfs.service';
 
 export interface CreateActivityDto {
   userId: string;
@@ -27,6 +31,7 @@ export class ActivityController {
   constructor(
     private readonly activityService: ActivityService,
     private readonly classifierService: ActivityClassifierService,
+    private readonly ipfsService: IPFSService,
   ) {}
 
   @Post()
@@ -62,6 +67,13 @@ export class ActivityController {
   async getUserActivities(@Request() req) {
     const userId = req.user.sub || req.user.userId;
     return this.activityService.getUserActivities(userId);
+  }
+
+  @Get('community')
+  @UseGuards(JwtAuthGuard)
+  async getCommunityActions(@Request() req) {
+    const userId = req.user.sub || req.user.userId;
+    return this.activityService.getCommunityActions(userId);
   }
 
   @Get('stats')
@@ -137,5 +149,41 @@ export class ActivityController {
       classification,
       message: 'Test classification completed',
     };
+  }
+
+  // POST /activity/media
+  // Uploads an image to Supabase Storage and stores the public URL in the database.
+  @Post('media')
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadMediaAction(
+    @UploadedFile() file: Express.Multer.File,
+    @Body() body: { actionType: string; description?: string },
+    @Request() req
+  ) {
+    console.log('Received file:', file); // DEBUG LOG
+    // 1. Upload to Supabase
+    const mediaUrl = await this.ipfsService.uploadFile(file);
+    // 2. Create activity in DB
+    const activity = await this.activityService.createMediaActivity({
+      userId: req.user.sub || req.user.userId,
+      actionType: body.actionType,
+      mediaUrl,
+      mediaType: file.mimetype,
+      description: body.description,
+    });
+    // 3. Assign voters
+    await this.activityService.assignVoters((activity as any)._id);
+    return { activity };
+  }
+
+  @Post(':id/vote')
+  @UseGuards(JwtAuthGuard)
+  async voteOnAction(
+    @Param('id') actionId: string,
+    @Body() body: { value: 'yes' | 'no' | 'fake' | 'spam' },
+    @Request() req
+  ) {
+    return this.activityService.voteOnAction(actionId, req.user.sub || req.user.userId, body.value);
   }
 }

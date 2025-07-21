@@ -1,26 +1,55 @@
-import { IsEmail, IsString, MinLength, IsOptional, IsBoolean } from 'class-validator';
+import { IsString, IsNotEmpty, IsEmail, IsOptional } from 'class-validator';
 
 export class CreateUserDto {
   @IsString()
-  @MinLength(3)
+  @IsNotEmpty()
   username: string;
 
   @IsEmail()
+  @IsNotEmpty()
   email: string;
 
   @IsString()
-  @MinLength(6)
+  @IsNotEmpty()
   password: string;
 
+  @IsString()
   @IsOptional()
-  @IsBoolean()
+  role?: 'user' | 'admin';
+
+  @IsOptional()
   isVerified?: boolean;
 
-  @IsOptional()
   @IsString()
+  @IsOptional()
   verificationToken?: string | null;
 
-  @IsOptional()
   @IsString()
+  @IsOptional()
+  resetToken?: string | null;
+}
+
+export class UpdateUserDto {
+  @IsOptional()
+  username?: string;
+
+  @IsOptional()
+  email?: string;
+
+  @IsOptional()
+  password?: string;
+
+  @IsOptional()
+  role?: 'user' | 'admin';
+
+  @IsOptional()
+  isVerified?: boolean;
+
+  @IsString()
+  @IsOptional()
+  verificationToken?: string | null;
+
+  @IsString()
+  @IsOptional()
   resetToken?: string | null;
 } 

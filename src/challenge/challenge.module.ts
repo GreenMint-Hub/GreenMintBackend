@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
 import { Challenge, ChallengeSchema } from './challenge.schema';
-import { ChallengeService } from './challenge.service';
 import { ChallengeController } from './challenge.controller';
+import { ChallengeService } from './challenge.service';
 
 @Module({
   imports: [
@@ -10,7 +10,8 @@ import { ChallengeController } from './challenge.controller';
       { name: Challenge.name, schema: ChallengeSchema },
     ]),
   ],
-  providers: [ChallengeService],
   controllers: [ChallengeController],
+  providers: [ChallengeService],
+  exports: [ChallengeService],
 })
 export class ChallengeModule {}
