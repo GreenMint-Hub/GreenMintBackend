@@ -202,7 +202,7 @@ export class TransportApiService {
     // Simplified carbon calculation based on route and fare
     // In production, this would use more sophisticated algorithms
 
-    const baseCarbonPerKm = 0.15; // kg CO2 saved per km vs driving
+    const baseCarbonPerKm = 0.15; // kg CO2 saved per km vs cycling
     const avgDistancePerFare = 10; // km per average fare
 
     return baseCarbonPerKm * avgDistancePerFare;

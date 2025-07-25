@@ -28,9 +28,9 @@ export class ActivityClassifierService {
     let type: ActivityType;
     let confidence: number;
 
-    // Driving detection (high speed, consistent movement)
+    // CYCLING detection (high speed, consistent movement)
     if (features.avgSpeed >= 40 && features.speedVariance < 10) {
-      type = ActivityType.DRIVING;
+      type = ActivityType.CYCLING;
       confidence = 0.95;
     }
     // Biking detection (moderate speed, some variance)

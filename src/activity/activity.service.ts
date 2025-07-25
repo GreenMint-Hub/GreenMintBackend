@@ -58,7 +58,7 @@ export class ActivityService {
    * Detect activity type based on speed and sensor data
    * Biking: 10-30 km/h
    * Walking: 3-8 km/h
-   * Driving: 40+ km/h
+   * CYCLING: 40+ km/h
    * Public Transport: varies
    */
   detectActivity(sensorData: SensorData[]): ActivityDetectionResult {
@@ -79,9 +79,9 @@ export class ActivityService {
     let points: number;
 
     if (avgSpeed >= 40) {
-      type = ActivityType.DRIVING;
+      type = ActivityType.CYCLING;
       confidence = 0.9;
-      carbonSaved = 0; // No carbon saved for driving
+      carbonSaved = 0; // No carbon saved for cycling
       points = 0;
     } else if (avgSpeed >= 10 && avgSpeed <= 30) {
       type = ActivityType.BIKING;
@@ -116,9 +116,9 @@ export class ActivityService {
     // Simplified carbon calculation
     // In a real implementation, this would be more sophisticated
     const baseCarbonPerKm = {
-      biking: 0.2, // kg CO2 saved per km vs driving
-      walking: 0.3, // kg CO2 saved per km vs driving
-      public_transport: 0.15, // kg CO2 saved per km vs driving
+      cycling: 0.2, // kg CO2 saved per km vs cycling
+      walking: 0.3, // kg CO2 saved per km vs cycling
+      public_transport: 0.15, // kg CO2 saved per km vs cycling
     };
 
     return baseCarbonPerKm[activityType] || 0;

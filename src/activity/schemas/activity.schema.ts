@@ -6,7 +6,7 @@ export type ActivityDocument = Activity & Document;
 export enum ActivityType {
   WALKING = 'walking',
   BIKING = 'biking',
-  DRIVING = 'driving',
+  CYCLING = 'cycling',
   RECYCLING = 'recycling',
   BUS = 'bus',
   OTHER = 'other',
