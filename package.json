@@ -6,8 +6,6 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "preinstall": "npm install -g npm@latest",
-    "install": "npm install --force",
     "prebuild": "npm install -g @nestjs/cli",
     "build": "nest build && tsc -p tsconfig.build.json",
     "start": "node dist/main",
