@@ -7,7 +7,7 @@
   "license": "UNLICENSED",
   "scripts": {
     "prebuild": "npm install -g @nestjs/cli",
-    "build": "nest build && tsc -p tsconfig.build.json",
+    "build": "nest build --webpack=false && tsc -p tsconfig.build.json",
     "start": "node dist/main",
     "engine-strict": true,
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -74,9 +74,10 @@
     "@types/mongoose": "^5.11.97",
     "@types/multer": "^2.0.0",
     "@types/node": "^24.1.0",
-    "@types/nodemailer": "^6.4.17",
-    "@types/passport-jwt": "^4.0.1",
-    "@types/socket.io": "^3.0.2",
+    "@types/nodemailer": "^6.4.17", 
+    "@types/bcrypt": "^5.0.2",
+  "@types/node-cron": "^3.0.11",
+"@types/uuid": "^10.0.0",
     "@types/supertest": "^6.0.2",
     "eslint": "^9.18.0",
     "eslint-config-prettier": "^10.0.1",
@@ -111,6 +112,7 @@
     "testEnvironment": "node"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=20.10.0",
+    "npm": "10.2.0"
   }
 }
