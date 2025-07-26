@@ -1,4 +1,6 @@
 {
+  "outDir": "./dist",
+  "rootDir": "./src",
   "extends": "./tsconfig.json",
   "exclude": ["node_modules", "test", "dist", "**/*spec.ts"]
 }

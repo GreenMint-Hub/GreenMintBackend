@@ -36,6 +36,7 @@ async function bootstrap() {
       'http://192.168.8.26:3001',
       'exp://192.168.8.26:8081',
       'exp://localhost:8081',
+      'https://greenmintbackend.onrender.com',
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
