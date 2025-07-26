@@ -6,8 +6,8 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-      "postinstall": "ls -la node_modules/.bin",
-    "build": "node node_modules/@nestjs/cli/bin/nest.js build",
+      "postinstall": "ls -la node_modules/.bin && ls -la node_modules/@nestjs && npm list @nestjs/cli",
+   "build": "npx nest build",
     "start": "node dist/main",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "nest start --watch",
@@ -106,5 +106,8 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
-  }
+  },
+  "engines": {
+  "node": "18.x"
+}
 }
