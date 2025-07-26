@@ -6,9 +6,12 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-      "postinstall": "ls -la node_modules/.bin && ls -la node_modules/@nestjs && npm list @nestjs/cli",
-   "build": "npx nest build",
-    "start": "node dist/main",
+    "preinstall": "npm install -g npm@latest",
+  "install": "npm install --force",
+  "prebuild": "npm install -g @nestjs/cli",
+  "build": "nest build && tsc -p tsconfig.build.json",
+  "start": "node dist/main",
+  "engine-strict": true,
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
@@ -108,6 +111,6 @@
     "testEnvironment": "node"
   },
   "engines": {
-  "node": "18.x"
+  "node": ">=20.0.0"
 }
 }
