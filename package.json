@@ -1,4 +1,4 @@
-{
+ {
   "name": "server",
   "version": "0.0.1",
   "description": "",
@@ -6,7 +6,7 @@
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
-    "build": "nest build && tsc -p tsconfig.build.json",
+    "build": "npx nest build && tsc -p tsconfig.build.json",
     "start": "node dist/main",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "start:dev": "nest start --watch",
@@ -23,7 +23,6 @@
     "@aws-sdk/client-s3": "^3.850.0",
     "@aws-sdk/s3-request-presigner": "^3.850.0",
     "@fastify/helmet": "^13.0.1",
-    "@nestjs/cli": "^11.0.7",
     "@nestjs/common": "^11.1.5",
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.5",
@@ -37,14 +36,14 @@
     "@nestjs/throttler": "^6.4.0",
     "@nestjs/websockets": "^11.1.5",
     "@supabase/supabase-js": "^2.52.1",
-    "@types/bcryptjs": "^3.0.0",
-    "@types/multer": "^2.0.0",
-    "@types/passport-jwt": "^4.0.1",
     "@types/bcrypt": "^5.0.2",
+    "@types/bcryptjs": "^3.0.0",
     "@types/express": "^5.0.3",
+    "@types/multer": "^2.0.0",
     "@types/node": "^22.16.5",
     "@types/node-cron": "^3.0.11",
     "@types/nodemailer": "^6.4.17",
+    "@types/passport-jwt": "^4.0.1",
     "@types/socket.io": "^3.0.2",
     "@types/uuid": "^10.0.0",
     "axios": "^1.10.0",
@@ -69,6 +68,7 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3.2.0",
     "@eslint/js": "^9.18.0",
+    "@nestjs/cli": "^11.0.7",
     "@nestjs/schematics": "^11.0.0",
     "@nestjs/testing": "^11.0.1",
     "@swc/cli": "^0.6.0",
