@@ -28,17 +28,7 @@ async function bootstrap() {
 
   // Enable CORS for React Native integration
   app.enableCors({
-    origin: process.env.ALLOWED_ORIGINS?.split(',') || [
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'http://192.168.8.26:4000',
-      'http://192.168.8.26:3000',
-      'http://192.168.8.26:3001',
-      'exp://192.168.8.26:8081',
-      'exp://localhost:8081',
-      'https://greenmintbackend.onrender.com',
-    ],
-    credentials: true,
+    origin: '*',
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   });
@@ -65,3 +55,4 @@ async function bootstrap() {
   await app.listen(port, '0.0.0.0');
 }
 bootstrap();
+
