@@ -16,14 +16,15 @@ export class ChallengeService {
   }
 
   async listAvailableChallenges(userId: string) {
-    if (!isValidObjectId(userId)) return this.challengeModel.find({ status: 'active' });
-    // List active challenges the user is NOT in
+    if (!isValidObjectId(userId)) {
+      // Return all challenges (active and completed) if no valid userId
+      return this.challengeModel.find({}).sort({ endDate: -1 });
+    }
+    
+    // List all challenges (active and completed) that the user is NOT in
     return this.challengeModel.find({
-      status: 'active',
       'participants.user': { $ne: new Types.ObjectId(userId) },
-      startDate: { $lte: new Date() },
-      endDate: { $gte: new Date() },
-    });
+    }).sort({ endDate: -1 });
   }
 
   async listMyChallenges(userId: string) {
@@ -104,3 +105,6 @@ export class ChallengeService {
     return expiredChallenges.length;
   }
 }
+
+
+

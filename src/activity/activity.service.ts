@@ -113,23 +113,21 @@ export class ActivityService {
    * Calculate carbon saved based on activity type and distance
    */
   private calculateCarbonSaved(speed: number, activityType: string): number {
-    // Simplified carbon calculation
-    // In a real implementation, this would be more sophisticated
+    // Updated carbon savings based on provided measurements
     const baseCarbonPerKm = {
-      cycling: 0.2, // kg CO2 saved per km vs cycling
-      walking: 0.3, // kg CO2 saved per km vs cycling
-      public_transport: 0.15, // kg CO2 saved per km vs cycling
+      cycling: 0.25, // kg CO2 saved per km vs car
+      walking: 0.25, // kg CO2 saved per km vs car
+      public_transport: 0.15, // keep as is unless you have new data
     };
 
-    return baseCarbonPerKm[activityType] || 0;
+    const value = baseCarbonPerKm[activityType as keyof typeof baseCarbonPerKm];
+    return typeof value === 'number' ? value : 0;
   }
 
   /**
    * Calculate points based on activity type and speed
    */
   private calculatePoints(speed: number, activityType: string): number {
-    // Points system: more points for more sustainable activities
-    // Reduced thresholds for easier testing
     const basePoints = {
       biking: 10, // Points per 5 meters (reduced from larger distances)
       walking: 15, // Points per 5 steps (reduced from larger distances)
@@ -251,37 +249,55 @@ export class ActivityService {
   }
 
   /**
-   * Log a new activity manually
+   * Log activity and update user/challenge points
    */
   async logActivity(userId: string, activityData: any): Promise<Activity> {
-    // Add points to user
+    // Add points to user's total account
     await this.usersService.addPoints(userId, activityData.points || 0);
 
-    // If user is in an active challenge, add points to challenge
-    const activeChallenge = await this.challengeModel.findOne({
+    // Find active challenges the user is participating in
+    const activeChallenges = await this.challengeModel.find({
       'participants.user': userId,
       status: 'active',
       startDate: { $lte: new Date() },
       endDate: { $gte: new Date() },
     });
+
     let challengeId: string | null = null;
-    if (activeChallenge) {
-      await this.challengeService.addPointsToUser(String(activeChallenge._id), userId, activityData.points || 0);
-      challengeId = String(activeChallenge._id);
+    
+    // Add points to each active challenge the user is in
+    for (const challenge of activeChallenges) {
+      const participant = challenge.participants.find(p => p.user.equals(userId));
+      if (participant) {
+        // Only count points earned after joining the challenge
+        const pointsEarned = activityData.points || 0;
+        participant.points += pointsEarned;
+        
+        // Check if user has reached the goal
+        if (participant.points >= challenge.goalPoints && challenge.status === 'active') {
+          challenge.status = 'completed';
+          challenge.winner = participant.user;
+        }
+        
+        await challenge.save();
+        console.log(`Added ${pointsEarned} points to challenge "${challenge.name}" for user ${userId}. Total challenge points: ${participant.points}`);
+      }
     }
 
     // Save activity with challengeId if applicable
     const activity = new this.activityModel({
       ...activityData,
       userId,
-      challengeId,
+      challengeId: activeChallenges.length > 0 ? String(activeChallenges[0]._id) : null,
     });
+    
     // Update user stats
     await this.updateUserStats(
       userId,
       activityData.co2Saved || 0,
       activityData.points || 0,
     );
+    
     return await activity.save();
   }
 

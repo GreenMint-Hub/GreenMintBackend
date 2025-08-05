@@ -11,6 +11,8 @@ import { LeaderboardModule } from './leaderboard/leaderboard.module';
 import { AuthModule } from './auth/auth.module';
 import { ChallengeModule } from './challenge/challenge.module';
 import { NftModule } from './nft/nft.module';
+import { CartModule } from './cart/cart.module';
+import { OrderModule } from './order/order.module';
 import { throttlerConfig } from './config/throttler.config';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 
@@ -46,6 +48,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     AuthModule,
     ChallengeModule,
     NftModule,
+    CartModule,
+    OrderModule,
   ],
   controllers: [AppController],
   providers: [AppService],

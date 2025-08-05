@@ -21,7 +21,7 @@ export class ChallengeController {
   async getAvailable(@Request() req) {
     // Update expired challenges first
     await this.challengeService.updateExpiredChallenges();
-    // For now, just return all active challenges if no userId
+    // Return all challenges (active and completed) that the user is not in
     return this.challengeService.listAvailableChallenges(req.user.userId);
   }
 
