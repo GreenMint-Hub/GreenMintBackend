@@ -19,6 +19,8 @@ export class ChallengeController {
   @Get('available')
   @UseGuards(JwtAuthGuard)
   async getAvailable(@Request() req) {
+    // Update expired challenges first
+    await this.challengeService.updateExpiredChallenges();
     // For now, just return all active challenges if no userId
     return this.challengeService.listAvailableChallenges(req.user.userId);
   }
@@ -26,8 +28,18 @@ export class ChallengeController {
   @Get('my')
   @UseGuards(JwtAuthGuard)
   async getMyChallenges(@Request() req) {
+    // Update expired challenges first
+    await this.challengeService.updateExpiredChallenges();
     // Try to get userId from query, then from req.user, then fallback
     return this.challengeService.listMyChallenges(req.user.userId);
+  }
+
+  @Get('completed')
+  @UseGuards(JwtAuthGuard)
+  async getCompletedChallenges(@Request() req) {
+    // Update expired challenges first
+    await this.challengeService.updateExpiredChallenges();
+    return this.challengeService.listCompletedChallenges(req.user.userId);
   }
 
   @Post('join/:id')

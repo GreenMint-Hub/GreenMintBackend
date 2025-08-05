@@ -129,9 +129,10 @@ export class ActivityService {
    */
   private calculatePoints(speed: number, activityType: string): number {
     // Points system: more points for more sustainable activities
+    // Reduced thresholds for easier testing
     const basePoints = {
-      biking: 10,
-      walking: 15,
+      biking: 10, // Points per 5 meters (reduced from larger distances)
+      walking: 15, // Points per 5 steps (reduced from larger distances)
       public_transport: 8,
     };
 

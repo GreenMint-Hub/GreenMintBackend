@@ -33,6 +33,17 @@ export class ChallengeService {
     });
   }
 
+  async listCompletedChallenges(userId: string) {
+    if (!isValidObjectId(userId)) return [];
+    return this.challengeModel.find({
+      'participants.user': new Types.ObjectId(userId),
+      $or: [
+        { status: 'completed' },
+        { endDate: { $lt: new Date() } }
+      ]
+    });
+  }
+
   async joinChallenge(challengeId: string, user: any) {
     const challenge = await this.challengeModel.findById(challengeId);
     if (!challenge) throw new NotFoundException('Challenge not found');
@@ -68,5 +79,28 @@ export class ChallengeService {
     // Sort participants by points descending
     const leaderboard = [...challenge.participants].sort((a, b) => b.points - a.points);
     return leaderboard;
+  }
+
+  // Method to check and update expired challenges
+  async updateExpiredChallenges() {
+    const now = new Date();
+    const expiredChallenges = await this.challengeModel.find({
+      status: 'active',
+      endDate: { $lt: now }
+    });
+
+    for (const challenge of expiredChallenges) {
+      challenge.status = 'completed';
+      // Find the participant with the highest points as winner
+      if (challenge.participants.length > 0) {
+        const winner = challenge.participants.reduce((prev, current) => 
+          (prev.points > current.points) ? prev : current
+        );
+        challenge.winner = winner.user;
+      }
+      await challenge.save();
+    }
+
+    return expiredChallenges.length;
   }
 }
